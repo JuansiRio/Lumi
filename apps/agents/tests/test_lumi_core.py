@@ -11,7 +11,8 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-from apps.agents.core.lumi_core import _extraer_primer_json_con_clave_fase, process_message
+from apps.agents.core.json_utils import extraer_primer_json_con_clave_fase_y_rango as _extraer_primer_json_con_clave_fase
+from apps.agents.core.lumi_core import process_message
 from apps.agents.models.caso import ContextoComprimido
 from apps.agents.models.fase_output import LumiCoreInput, LumiCoreResponse
 

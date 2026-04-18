@@ -11,6 +11,7 @@ from uuid import UUID
 from pydantic import ValidationError
 
 from apps.agents.core import context_manager
+from apps.agents.core.json_utils import extraer_primer_json_con_clave_fase_y_rango
 from apps.agents.models.caso import ContextoComprimido
 from apps.agents.models.fase_output import FaseOutput, LumiCoreInput, LumiCoreResponse
 from apps.agents.tools import db
@@ -22,31 +23,6 @@ AGENTE_TRAZABILIDAD = "lumi_core"
 def _sonnet_cost_usd(input_tokens: int, output_tokens: int) -> float:
     """Precios de referencia Brief 3.7: Sonnet 4.5 — $3/MTok in, $15/MTok out."""
     return (input_tokens / 1_000_000) * 3.0 + (output_tokens / 1_000_000) * 15.0
-
-
-def _extraer_primer_json_con_clave_fase(texto: str) -> tuple[dict[str, Any], int, int] | None:
-    """
-    Busca el primer objeto JSON en ``texto`` que contenga la clave ``fase``.
-
-    Devuelve ``(objeto, inicio, fin_exclusivo)`` en índices de ``texto``, o ``None``.
-    """
-    dec = json.JSONDecoder()
-    n = len(texto)
-    i = 0
-    while i < n:
-        if texto[i] != "{":
-            i += 1
-            continue
-        try:
-            obj, end_rel = dec.raw_decode(texto[i:])
-        except json.JSONDecodeError:
-            i += 1
-            continue
-        if isinstance(obj, dict) and "fase" in obj:
-            fin = i + end_rel
-            return obj, i, fin
-        i += 1
-    return None
 
 
 def _respuesta_sin_bloque_json(texto: str, inicio: int, fin_exclusivo: int) -> str:
@@ -192,7 +168,7 @@ def process_message(inp: LumiCoreInput) -> LumiCoreResponse:
     fase_output: FaseOutput | None = None
     respuesta_texto = texto_modelo.strip()
 
-    hallazgo = _extraer_primer_json_con_clave_fase(texto_modelo)
+    hallazgo = extraer_primer_json_con_clave_fase_y_rango(texto_modelo)
     if hallazgo is not None:
         raw_dict, ini, fin = hallazgo
         try:

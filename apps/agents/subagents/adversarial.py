@@ -12,6 +12,7 @@ from uuid import UUID
 
 from pydantic import ValidationError
 
+from apps.agents.core.json_utils import extraer_primer_json_con_clave_fase
 from apps.agents.models.fase_output import AdversarialInput, AdversarialOutput
 from apps.agents.tools import db
 
@@ -23,30 +24,6 @@ _FASE_5A_PATH = Path(__file__).resolve().parent.parent / "core" / "prompts" / "f
 def _sonnet_cost_usd(input_tokens: int, output_tokens: int) -> float:
     """Precios de referencia Brief 3.7: Sonnet 4.5 — $3/MTok in, $15/MTok out."""
     return (input_tokens / 1_000_000) * 3.0 + (output_tokens / 1_000_000) * 15.0
-
-
-def _extraer_primer_json_con_clave_fase(texto: str) -> dict[str, Any] | None:
-    """
-    Busca el primer objeto JSON en ``texto`` que contenga la clave ``fase``.
-
-    Mismo criterio que ``apps.agents.core.lumi_core._extraer_primer_json_con_clave_fase``.
-    """
-    dec = json.JSONDecoder()
-    n = len(texto)
-    i = 0
-    while i < n:
-        if texto[i] != "{":
-            i += 1
-            continue
-        try:
-            obj, end_rel = dec.raw_decode(texto[i:])
-        except json.JSONDecodeError:
-            i += 1
-            continue
-        if isinstance(obj, dict) and "fase" in obj:
-            return obj
-        i += 1
-    return None
 
 
 def _normalizar_contenido_fase(valor: Any) -> dict[str, Any]:
@@ -226,7 +203,7 @@ def _run_adversarial_sync(inp: AdversarialInput) -> AdversarialOutput:
     tokens_total = input_tokens + output_tokens
     costo = _sonnet_cost_usd(input_tokens, output_tokens)
 
-    raw = _extraer_primer_json_con_clave_fase(texto_modelo)
+    raw = extraer_primer_json_con_clave_fase(texto_modelo)
     if raw is None:
         out = _fallback_output(
             tokens_total,
