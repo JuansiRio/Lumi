@@ -29,7 +29,7 @@ def _fake_external_env(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture
 def caso_sayago_id() -> UUID:
     """Identificador de caso de prueba (referencia Sayago vs. Roldán, simplificado)."""
-    return UUID("aaaaaaaa-bbbb-4ccc-dddd-eeeeeeeeeeee")
+    return uuid4()
 
 
 @pytest.fixture

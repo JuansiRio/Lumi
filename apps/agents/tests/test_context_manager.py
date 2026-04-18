@@ -87,7 +87,9 @@ class TestBuildContext:
         prompts_dir: Any,
     ) -> None:
         """3. Si el contexto supera el límite, los hechos quedan como máximo en 5."""
-        huge = "H" * 30_000
+        # Debe superar `max_tokens` con 10 hechos para disparar el recorte a 5, pero con 5 hechos
+        # el encogedor (prompts, etc.) debe poder llevar el total bajo el techo.
+        huge = "H" * 9_000
         diez = [
             Hecho(
                 id=uuid4(),
@@ -103,7 +105,7 @@ class TestBuildContext:
             "apps.agents.core.context_manager.db.search_hechos_semanticos",
             return_value=diez,
         ):
-            ctx = build_context(caso_sayago_id, "0E", max_tokens=25_000, prompts_dir=prompts_dir)
+            ctx = build_context(caso_sayago_id, "0E", max_tokens=1_000, prompts_dir=prompts_dir)
         assert len(ctx.hechos_relevantes) <= 5
         assert ctx.total_tokens_est <= 25_000
 
@@ -171,7 +173,7 @@ class TestCompressSession:
         "apps.agents.core.context_manager.db.get_mensajes_por_fase",
         return_value=[{"rol": "abogado", "contenido": "Mensaje de prueba"}],
     )
-    @patch("apps.agents.core.context_manager.Anthropic")
+    @patch("anthropic.Anthropic")
     def test_compress_session_saves_with_aprobado_abogado_false(
         self,
         mock_anthropic_cls: MagicMock,
@@ -197,7 +199,7 @@ class TestCompressSession:
 
     @patch("apps.agents.core.context_manager.db.get_max_version_output_fase", return_value=3)
     @patch("apps.agents.core.context_manager.db.get_mensajes_por_fase", return_value=[{"a": 1}])
-    @patch("apps.agents.core.context_manager.Anthropic")
+    @patch("anthropic.Anthropic")
     @patch("apps.agents.core.context_manager.db.save_output_fase")
     def test_compress_session_version_increments_from_db(
         self,
@@ -216,10 +218,12 @@ class TestCompressSession:
 
     @patch("apps.agents.core.context_manager.db.get_mensajes_por_fase", return_value=[])
     @patch("apps.agents.core.context_manager.db.get_ultimos_mensajes", return_value=[])
-    @patch("apps.agents.core.context_manager.Anthropic")
+    @patch("apps.agents.core.context_manager.db.get_max_version_output_fase", return_value=0)
+    @patch("anthropic.Anthropic")
     def test_compress_session_still_calls_model_with_empty_history(
         self,
         mock_anthropic_cls: MagicMock,
+        _gv: MagicMock,
         _gu: MagicMock,
         _gm: MagicMock,
         caso_sayago_id: UUID,
