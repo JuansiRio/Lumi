@@ -18,3 +18,10 @@ __pycache__/
 .venv/
 venv/
 env/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Next.js build
+apps/web/.next/
+apps/web/out/
