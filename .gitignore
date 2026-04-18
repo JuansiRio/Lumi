@@ -1,0 +1,7 @@
+.env
+.env.local
+.env.*.local
+
+# Next.js (apps/web)
+apps/web/.next/
+apps/web/node_modules/

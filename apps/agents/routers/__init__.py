@@ -1,0 +1,1 @@
+"""Routers FastAPI — LUMI Judicial."""

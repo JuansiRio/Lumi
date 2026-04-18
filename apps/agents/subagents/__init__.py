@@ -1,0 +1,1 @@
+"""Subagentes aislados — LUMI Judicial."""
