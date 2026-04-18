@@ -5,3 +5,16 @@
 # Next.js (apps/web)
 apps/web/.next/
 apps/web/node_modules/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+
+# Entornos virtuales
+.venv/
+venv/
+env/
