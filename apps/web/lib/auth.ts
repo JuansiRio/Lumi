@@ -1,4 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
+import type { Adapter } from "next-auth/adapters";
+import { SupabaseAdapter } from "@auth/supabase-adapter";
 import EmailProvider from "next-auth/providers/email";
 
 const resendSmtp = {
@@ -12,11 +14,16 @@ const resendSmtp = {
 };
 
 /**
- * NextAuth + magic link por email vía Resend SMTP.
- * RESEND_API_KEY, EMAIL_FROM, NEXTAUTH_SECRET en producción.
+ * NextAuth + magic link (Resend SMTP) + sesiones en Supabase vía adaptador.
+ * Servidor: RESEND_API_KEY, EMAIL_FROM, NEXTAUTH_SECRET,
+ * NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (secreta, no NEXT_PUBLIC).
  * AUTHORIZED_USERS opcional: lista separada por comas de emails permitidos.
  */
 export const authOptions: NextAuthOptions = {
+  adapter: SupabaseAdapter({
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  }) as Adapter,
   providers: [
     EmailProvider({
       server: resendSmtp,
@@ -24,7 +31,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET ?? "dev-placeholder-secret-change-in-production-32chars",
-  session: { strategy: "jwt" },
+  session: { strategy: "database" },
   callbacks: {
     async signIn({ user }) {
       const raw = process.env.AUTHORIZED_USERS?.trim();
