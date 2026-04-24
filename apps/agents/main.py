@@ -4,11 +4,16 @@ from pathlib import Path
 import os
 import sys
 
-_repo_root = Path(__file__).resolve().parent
-if not (_repo_root / "apps").exists():
-    _repo_root = _repo_root.parents[1]
-if str(_repo_root) not in sys.path:
-    sys.path.insert(0, str(_repo_root))
+_here = Path(__file__).resolve().parent
+# En local: .../apps/agents → subir 2 niveles para imports absolutos
+# En Railway: /app → ya está en el directorio correcto
+_candidates = [
+    _here.parents[1],  # local: raíz del repo
+    _here,             # Railway: /app
+]
+for _candidate in _candidates:
+    if str(_candidate) not in sys.path:
+        sys.path.insert(0, str(_candidate))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
