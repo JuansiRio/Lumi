@@ -4,7 +4,9 @@ from pathlib import Path
 import os
 import sys
 
-_repo_root = Path(__file__).resolve().parents[2]
+_repo_root = Path(__file__).resolve().parent
+if not (_repo_root / "apps").exists():
+    _repo_root = _repo_root.parents[1]
 if str(_repo_root) not in sys.path:
     sys.path.insert(0, str(_repo_root))
 
