@@ -6,8 +6,8 @@ COPY apps/agents/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY apps/agents/ .
+COPY . .
 
-EXPOSE 8000
+ENV PYTHONPATH=/app
 
-CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
+CMD uvicorn apps.agents.main:app --host 0.0.0.0 --port ${PORT:-8000}
