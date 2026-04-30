@@ -116,7 +116,7 @@ async def create_caso(
             "tokens_consumidos": 0,
             "costo_usd": 0.0,
         }
-        res = client.table("casos").insert(payload).select("*").limit(1).execute()
+        res = client.table("casos").insert(payload).execute()
         rows = res.data or []
         if not rows:
             raise HTTPException(status_code=500, detail="No se pudo crear el caso (sin datos devueltos).")
@@ -126,7 +126,7 @@ async def create_caso(
     except Exception:
         error_detail = traceback.format_exc()
         logger.error(f"Error creando caso: {error_detail}")
-        raise HTTPException(status_code=500, detail=error_detail)
+        raise HTTPException(status_code=500, detail="No se pudo crear el caso. Intente de nuevo.")
 
 
 @router.get("/", response_model=list[Caso])
