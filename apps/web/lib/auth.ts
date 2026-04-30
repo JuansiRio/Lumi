@@ -45,5 +45,11 @@ export const authOptions: NextAuthOptions = {
       const email = user?.email?.toLowerCase() ?? "";
       return allowed.includes(email);
     },
+    async session({ session, user }) {
+      if (session.user && user?.id) {
+        session.user.id = user.id;
+      }
+      return session;
+    },
   },
 };
