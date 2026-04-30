@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import traceback
+import logging
+
 from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
@@ -12,6 +15,8 @@ from supabase import Client
 
 from apps.agents.models.caso import Caso, EstadoCaso, TipoAccion
 from apps.agents.tools.db import _supabase
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/casos", tags=["casos"])
 
@@ -99,25 +104,29 @@ async def create_caso(
     body: CasoCreateRequest,
     x_user_id: str | None = Header(default=None, alias="X-User-ID"),
 ) -> Caso:
-    user_uuid = require_user_uuid(x_user_id)
-    client = _client()
-    payload: dict[str, Any] = {
-        "user_id": str(user_uuid),
-        "nombre_caso": body.nombre_caso.strip(),
-        "tipo_accion": body.tipo_accion.value,
-        "estado": EstadoCaso.activo.value,
-        "fase_actual": "0E",
-        "tokens_consumidos": 0,
-        "costo_usd": 0.0,
-    }
     try:
+        user_uuid = require_user_uuid(x_user_id)
+        client = _client()
+        payload: dict[str, Any] = {
+            "user_id": str(user_uuid),
+            "nombre_caso": body.nombre_caso.strip(),
+            "tipo_accion": body.tipo_accion.value,
+            "estado": EstadoCaso.activo.value,
+            "fase_actual": "0E",
+            "tokens_consumidos": 0,
+            "costo_usd": 0.0,
+        }
         res = client.table("casos").insert(payload).select("*").limit(1).execute()
+        rows = res.data or []
+        if not rows:
+            raise HTTPException(status_code=500, detail="No se pudo crear el caso (sin datos devueltos).")
+        return row_to_caso(rows[0])
+    except HTTPException:
+        raise
     except Exception:
-        raise HTTPException(status_code=500, detail="No se pudo crear el caso. Intente de nuevo.") from None
-    rows = res.data or []
-    if not rows:
-        raise HTTPException(status_code=500, detail="No se pudo crear el caso (sin datos devueltos).")
-    return row_to_caso(rows[0])
+        error_detail = traceback.format_exc()
+        logger.error(f"Error creando caso: {error_detail}")
+        raise HTTPException(status_code=500, detail=error_detail)
 
 
 @router.get("/", response_model=list[Caso])
