@@ -126,7 +126,7 @@ async def create_caso(
     except Exception:
         error_detail = traceback.format_exc()
         logger.error(f"Error creando caso: {error_detail}")
-        raise HTTPException(status_code=500, detail="No se pudo crear el caso. Intente de nuevo.")
+        raise HTTPException(status_code=500, detail=traceback.format_exc())
 
 
 @router.get("/", response_model=list[Caso])
